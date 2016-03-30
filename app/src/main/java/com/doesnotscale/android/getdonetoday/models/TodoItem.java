@@ -8,6 +8,11 @@ import io.realm.annotations.Required;
  * Created by ezaneski on 3/29/16.
  */
 public class TodoItem extends RealmObject {
+    public static final String ID = "id";
+    public static final String TEXT = "text";
+    public static final String COMPLETED = "completed";
+    public static final String TODAY = "today";
+
     @PrimaryKey private int id;
     @Required private String text;
     private boolean completed;
