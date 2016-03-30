@@ -1,5 +1,7 @@
 package com.doesnotscale.android.getdonetoday.ui;
 
+import android.app.TimePickerDialog;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -7,6 +9,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TimePicker;
 
 import com.doesnotscale.android.getdonetoday.R;
 import com.doesnotscale.android.getdonetoday.models.TodoItem;
@@ -25,6 +28,7 @@ public class TodayListActivity extends AppCompatActivity {
     private RealmResults<TodoItem> mTodoItems;
     private TodoItemFactory mTodoItemFactory;
     private TodoRealmAdapter mTodoRealmAdapter;
+    private SharedPreferences mSharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +62,8 @@ public class TodayListActivity extends AppCompatActivity {
         mRealmRecyclerView  = (RealmRecyclerView) findViewById(R.id.realm_recycler_view);
         mTodoRealmAdapter = new TodoRealmAdapter(this, mTodoItems, true, true);
         mRealmRecyclerView.setAdapter(mTodoRealmAdapter);
+
+        mSharedPreferences = getSharedPreferences(TAG, MODE_PRIVATE);
     }
 
     @Override
@@ -80,8 +86,22 @@ public class TodayListActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        int pickerHour = mSharedPreferences.getInt("notificationHour", 9);
+        int pickerMinute = mSharedPreferences.getInt("notificationMinute", 0);
+
+        if (id == R.id.notification_time_setting) {
+            TimePickerDialog timePickerDialog = new TimePickerDialog(this, new TimePickerDialog.OnTimeSetListener() {
+                @Override
+                public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                    mSharedPreferences.edit().putInt("notificationHour", hourOfDay).apply();
+                    mSharedPreferences.edit().putInt("notificationMinute", minute).apply();
+                }
+            }, pickerHour, pickerMinute, false);
+
+            timePickerDialog.show();
+
+            // TODO: Trigger alarm
+
             return true;
         }
 

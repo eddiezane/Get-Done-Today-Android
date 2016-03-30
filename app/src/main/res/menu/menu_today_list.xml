@@ -2,9 +2,10 @@
       xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="com.doesnotscale.android.getdonetoday.TodayListActivity">
+
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/notification_time_setting"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
+        android:title="@string/notification_time_setting"
         app:showAsAction="never"/>
 </menu>
