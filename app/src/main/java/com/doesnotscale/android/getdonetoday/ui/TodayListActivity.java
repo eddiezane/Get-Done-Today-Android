@@ -1,5 +1,7 @@
 package com.doesnotscale.android.getdonetoday.ui;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -15,12 +17,17 @@ import com.doesnotscale.android.getdonetoday.R;
 import com.doesnotscale.android.getdonetoday.models.TodoItem;
 import com.doesnotscale.android.getdonetoday.models.TodoItemFactory;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
 import co.moonmonkeylabs.realmrecyclerview.RealmRecyclerView;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
 public class TodayListActivity extends AppCompatActivity {
     private static final String TAG = TodayListActivity.class.getSimpleName();
+    private static final String NOTIFICATION_HOUR_SETTING = "NOTIFICATION_HOUR";
+    private static final String NOTIFICATION_MINUTE_SETTING = "NOTIFICATION_MINUTE";
 
     private RealmRecyclerView mRealmRecyclerView;
 
@@ -29,6 +36,8 @@ public class TodayListActivity extends AppCompatActivity {
     private TodoItemFactory mTodoItemFactory;
     private TodoRealmAdapter mTodoRealmAdapter;
     private SharedPreferences mSharedPreferences;
+    private int mNotificationHour;
+    private int mNotificationMinute;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +47,7 @@ public class TodayListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new addTodoFabClickListener());
+        fab.setOnClickListener(new AddTodoFabClickListener());
 
         mRealm = Realm.getDefaultInstance();
 
@@ -64,6 +73,7 @@ public class TodayListActivity extends AppCompatActivity {
         mRealmRecyclerView.setAdapter(mTodoRealmAdapter);
 
         mSharedPreferences = getSharedPreferences(TAG, MODE_PRIVATE);
+        setAlarmIfNotSet();
     }
 
     @Override
@@ -86,17 +96,11 @@ public class TodayListActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        int pickerHour = mSharedPreferences.getInt("notificationHour", 9);
-        int pickerMinute = mSharedPreferences.getInt("notificationMinute", 0);
+        int pickerHour = mSharedPreferences.getInt(NOTIFICATION_HOUR_SETTING, 9);
+        int pickerMinute = mSharedPreferences.getInt(NOTIFICATION_MINUTE_SETTING, 0);
 
         if (id == R.id.notification_time_setting) {
-            TimePickerDialog timePickerDialog = new TimePickerDialog(this, new TimePickerDialog.OnTimeSetListener() {
-                @Override
-                public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                    mSharedPreferences.edit().putInt("notificationHour", hourOfDay).apply();
-                    mSharedPreferences.edit().putInt("notificationMinute", minute).apply();
-                }
-            }, pickerHour, pickerMinute, false);
+            TimePickerDialog timePickerDialog = new TimePickerDialog(this, new NotificationTimePickerListener(), pickerHour, pickerMinute, false);
 
             timePickerDialog.show();
 
@@ -116,7 +120,7 @@ public class TodayListActivity extends AppCompatActivity {
         mRealm.commitTransaction();
     }
 
-    private class addTodoFabClickListener implements View.OnClickListener {
+    private class AddTodoFabClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             addTodo();
@@ -124,5 +128,32 @@ public class TodayListActivity extends AppCompatActivity {
 //                Snackbar.make(view, "Added to list", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
         }
-    };
+    }
+
+    private class NotificationTimePickerListener implements TimePickerDialog.OnTimeSetListener {
+        @Override
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            mSharedPreferences.edit().putInt(NOTIFICATION_HOUR_SETTING, hourOfDay).apply();
+            mSharedPreferences.edit().putInt(NOTIFICATION_MINUTE_SETTING, minute).apply();
+            scheduleAlarm(hourOfDay, minute);
+        }
+    }
+
+    private void setAlarmIfNotSet() {
+        if (mSharedPreferences.contains(NOTIFICATION_HOUR_SETTING) == false || mSharedPreferences.contains(NOTIFICATION_MINUTE_SETTING) == false) {
+            int hour = mSharedPreferences.getInt(NOTIFICATION_HOUR_SETTING, 9);
+            int minute = mSharedPreferences.getInt(NOTIFICATION_MINUTE_SETTING, 0);
+            scheduleAlarm(hour, minute);
+        }
+    }
+
+    private void scheduleAlarm(int hour, int minute) {
+        PendingIntent pendingIntent = DailyNotificationAlarmReceiver.newIntent(this);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        Calendar calendar = GregorianCalendar.getInstance();
+        calendar.set(GregorianCalendar.HOUR_OF_DAY, hour);
+        calendar.set(GregorianCalendar.MINUTE, minute);
+
+        alarmManager.setRepeating(alarmManager.RTC, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+    }
 }
