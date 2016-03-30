@@ -16,7 +16,6 @@ import io.realm.RealmResults;
 import io.realm.RealmViewHolder;
 
 public class TodoRealmAdapter extends RealmBasedRecyclerViewAdapter<TodoItem, TodoRealmAdapter.ViewHolder> {
-    private LayoutInflater mLayoutInflater;
     private RealmResults<TodoItem> realmResults;
 
     public class ViewHolder extends RealmViewHolder {
@@ -30,13 +29,12 @@ public class TodoRealmAdapter extends RealmBasedRecyclerViewAdapter<TodoItem, To
 
     public TodoRealmAdapter(Context context, RealmResults<TodoItem> realmResults, boolean automaticUpdate, boolean animateResults) {
         super(context, realmResults, automaticUpdate, animateResults);
-        mLayoutInflater = LayoutInflater.from(context);
         this.realmResults = realmResults;
     }
 
     @Override
-    public ViewHolder onCreateRealmViewHolder(ViewGroup viewGroup, int viewType) {
-        View v = mLayoutInflater.inflate(R.layout.today_list_item, viewGroup, false);
+    public ViewHolder onCreateRealmViewHolder(ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.today_list_item, parent, false);
         ViewHolder vh = new ViewHolder((LinearLayout) v);
         return vh;
     }
