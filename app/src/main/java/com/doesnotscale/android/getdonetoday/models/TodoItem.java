@@ -1,22 +1,27 @@
-package com.doesnotscale.android.getdonetoday;
+package com.doesnotscale.android.getdonetoday.models;
 
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
 
 /**
  * Created by ezaneski on 3/29/16.
  */
 public class TodoItem extends RealmObject {
+    @PrimaryKey private int id;
     @Required private String text;
     private boolean completed;
+    private boolean today;
 
     public TodoItem() {
-        this.completed = false;
     }
 
-    public TodoItem(String text) {
-        this();
-        this.text = text;
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getText() {
@@ -33,5 +38,13 @@ public class TodoItem extends RealmObject {
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+    }
+
+    public boolean isToday() {
+        return today;
+    }
+
+    public void setToday(boolean today) {
+        this.today = today;
     }
 }
