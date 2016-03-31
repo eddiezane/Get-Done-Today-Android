@@ -11,6 +11,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
@@ -18,17 +20,21 @@ import com.doesnotscale.android.getdonetoday.R;
 import com.doesnotscale.android.getdonetoday.models.TodoItem;
 import com.doesnotscale.android.getdonetoday.models.TodoItemFactory;
 
+import java.util.ArrayList;
+
 import co.moonmonkeylabs.realmrecyclerview.RealmRecyclerView;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
 public class TodoListActivity extends AppCompatActivity {
+    private static final String TAG = TodoListActivity.class.getSimpleName();
+
     private Realm mRealm;
     private RealmResults<TodoItem> mTodoItems;
     private TodoItemFactory mTodoItemFactory;
     private TodoRealmAdapter mTodoRealmAdapter;
     private RealmRecyclerView mRealmRecyclerView;
-
+    private Menu mMenu;
 
     public static Intent newIntent(Context context) {
         Intent intent = new Intent(context, TodoListActivity.class);
@@ -57,14 +63,61 @@ public class TodoListActivity extends AppCompatActivity {
 
         mRealmRecyclerView  = (RealmRecyclerView) findViewById(R.id.realm_recycler_view);
         mTodoRealmAdapter = new TodoRealmAdapter(this, mTodoItems, true, true);
+
+        mTodoRealmAdapter.setTodoRealmAdapterCallback(new TodoRealmAdapter.TodoRealmAdapterCallback() {
+            @Override
+            public void selectionStart() {
+                MenuItem confirmMenuItem = mMenu.findItem(R.id.todo_list_selection_confirm);
+                confirmMenuItem.setVisible(true);
+
+                MenuItem cancelMenuItem = mMenu.findItem(R.id.todo_list_selection_cancel);
+                cancelMenuItem.setVisible(true);
+            }
+
+            @Override
+            public void selectionEnd() {
+                MenuItem confirmMenuItem = mMenu.findItem(R.id.todo_list_selection_confirm);
+                confirmMenuItem.setVisible(false);
+
+                MenuItem cancelMenuItem = mMenu.findItem(R.id.todo_list_selection_cancel);
+                cancelMenuItem.setVisible(false);
+
+                Snackbar.make(findViewById(R.id.todo_list_root), "Added items to Today List", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+
         mRealmRecyclerView.setAdapter(mTodoRealmAdapter);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_todo_list, menu);
+        this.mMenu = menu;
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.todo_list_selection_confirm) {
+            ArrayList<TodoItem> selectedTodoItems = mTodoRealmAdapter.getSelectedTodoItems();
+            for (TodoItem todoItem : selectedTodoItems) {
+                mRealm.beginTransaction();
+                todoItem.setToday(true);
+                mRealm.commitTransaction();
+            }
+            Log.d(TAG, "THE SELECTED TODO ITEMS ARE: " + selectedTodoItems.toString());
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     private void addTodo(String todoText) {
         mRealm.beginTransaction();
         TodoItem item = mTodoItemFactory.create();
-        item.setText(todoText);
-        item.setToday((item.getId() % 2) == 0);
+        item.setText(todoText.trim());
         mRealm.copyToRealm(item);
         mRealm.commitTransaction();
     }

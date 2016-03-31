@@ -32,7 +32,7 @@ public class DailyNotificationAlarmReceiver extends BroadcastReceiver {
     }
 
     public void showNotification(Context context) {
-        Intent intent = new Intent(context, TodayListActivity.class);
+        Intent intent = new Intent(context, TodoListActivity.class);
         PendingIntent pi = PendingIntent.getActivity(context, NOTIFICATION_REQUEST_CODE, intent, 0);
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.mipmap.ic_my_launcher)

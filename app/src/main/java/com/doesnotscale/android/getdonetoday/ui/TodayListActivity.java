@@ -60,11 +60,10 @@ public class TodayListActivity extends AppCompatActivity {
 
         mTodoItemFactory = new TodoItemFactory(mTodoItems.max("id"));
 
-//        for (int i = 0; i < 10; i++) {
+//        for (int i = 0; i < 100; i++) {
 //            mRealm.beginTransaction();
 //            TodoItem item = mTodoItemFactory.create();
 //            item.setText("TodoItem: " + item.getId());
-//            item.setToday((item.getId() % 2) == 0);
 //            mRealm.copyToRealm(item);
 //            mRealm.commitTransaction();
 //        }

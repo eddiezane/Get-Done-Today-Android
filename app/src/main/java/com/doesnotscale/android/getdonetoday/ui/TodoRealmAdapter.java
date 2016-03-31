@@ -13,6 +13,7 @@ import com.doesnotscale.android.getdonetoday.R;
 import com.doesnotscale.android.getdonetoday.models.TodoItem;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import io.realm.RealmBasedRecyclerViewAdapter;
 import io.realm.RealmResults;
@@ -22,7 +23,14 @@ public class TodoRealmAdapter extends RealmBasedRecyclerViewAdapter<TodoItem, To
     private static final String TAG = TodoRealmAdapter.class.getSimpleName();
     private RealmResults<TodoItem> realmResults;
     private ArrayList<TodoItem> selectedTodoItems;
+    private ArrayList<ViewHolder> selectedViewHolders;
     private boolean inSelectMode;
+    private TodoRealmAdapterCallback mTodoRealmAdapterCallback;
+
+    public interface TodoRealmAdapterCallback {
+        void selectionStart();
+        void selectionEnd();
+    }
 
     public class ViewHolder extends RealmViewHolder implements View.OnClickListener, View.OnLongClickListener {
         public TextView todayListItemText;
@@ -31,25 +39,35 @@ public class TodoRealmAdapter extends RealmBasedRecyclerViewAdapter<TodoItem, To
         public ViewHolder(LinearLayout layout) {
             super(layout);
             this.todayListItemText = (TextView) layout.findViewById(R.id.today_list_item_text);
-            selectedTodoItems = new ArrayList<>();
-            inSelectMode = false;
         }
 
         public void setTodoItem(TodoItem todoItem) {
             this.todoItem = todoItem;
             this.todayListItemText.setText(todoItem.getText());
-            this.todayListItemText.setBackgroundColor(COLORS[(int) (todoItem.getId() % COLORS.length)]);
+            if (selectedTodoItems != null && selectedTodoItems.contains(todoItem)) {
+                this.todayListItemText.setBackgroundColor(Color.BLACK);
+            } else {
+                this.todayListItemText.setBackgroundColor(COLORS[todoItem.getId() % COLORS.length]);
+            }
         }
 
         @Override
         public void onClick(View v) {
-            handleSelectedTodo(this, this.todoItem);
+            if (mTodoRealmAdapterCallback != null) {
+                handleSelectedTodo(this, this.todoItem);
+            }
         }
 
         @Override
         public boolean onLongClick(View v) {
+            if (mTodoRealmAdapterCallback == null) {
+                return false;
+            }
             if (!inSelectMode) {
                 inSelectMode = true;
+                mTodoRealmAdapterCallback.selectionStart();
+                selectedViewHolders = new ArrayList<>();
+                selectedTodoItems = new ArrayList<>();
             }
             handleSelectedTodo(this, this.todoItem);
             return true;
@@ -59,6 +77,7 @@ public class TodoRealmAdapter extends RealmBasedRecyclerViewAdapter<TodoItem, To
     public TodoRealmAdapter(Context context, RealmResults<TodoItem> realmResults, boolean automaticUpdate, boolean animateResults) {
         super(context, realmResults, automaticUpdate, animateResults);
         this.realmResults = realmResults;
+        this.inSelectMode = false;
     }
 
     @Override
@@ -91,12 +110,32 @@ public class TodoRealmAdapter extends RealmBasedRecyclerViewAdapter<TodoItem, To
         if (inSelectMode) {
             if (selectedTodoItems.contains(todoItem)) {
                 selectedTodoItems.remove(todoItem);
+                selectedViewHolders.remove(vh);
                 vh.todayListItemText.setBackgroundColor(COLORS[(int) (todoItem.getId() % COLORS.length)]);
             } else {
-                selectedTodoItems.add(todoItem);
+                if (!selectedTodoItems.contains(todoItem)) {
+                    selectedTodoItems.add(todoItem);
+                }
+                if (!selectedViewHolders.contains(todoItem)) {
+                    selectedViewHolders.add(vh);
+                }
                 vh.todayListItemText.setBackgroundColor(Color.BLACK);
             }
         }
-        Log.d(TAG, "List is: " + selectedTodoItems.toString());
+    }
+
+    public void setTodoRealmAdapterCallback(TodoRealmAdapterCallback todoRealmAdapterCallback) {
+        this.mTodoRealmAdapterCallback = todoRealmAdapterCallback;
+    }
+
+    public ArrayList<TodoItem> getSelectedTodoItems() {
+        this.inSelectMode = false;
+        this.mTodoRealmAdapterCallback.selectionEnd();
+        for (Iterator iterator = selectedViewHolders.iterator(); iterator.hasNext();) {
+            ViewHolder vh = (ViewHolder) iterator.next();
+            vh.todayListItemText.setBackgroundColor(COLORS[(vh.todoItem.getId() % COLORS.length)]);
+            iterator.remove();
+        }
+        return this.selectedTodoItems;
     }
 }

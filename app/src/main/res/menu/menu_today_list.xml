@@ -4,14 +4,15 @@
       tools:context="com.doesnotscale.android.getdonetoday.TodayListActivity">
 
     <item
-        android:id="@+id/notification_time_setting"
-        android:orderInCategory="100"
-        android:title="@string/notification_time_setting"
-        app:showAsAction="never"/>
-    <item
         android:id="@+id/show_notification_setting"
         android:orderInCategory="100"
         android:title="@string/show_notification_setting"
         android:checkable="true"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/notification_time_setting"
+        android:orderInCategory="100"
+        android:title="@string/notification_time_setting"
         app:showAsAction="never"/>
 </menu>
