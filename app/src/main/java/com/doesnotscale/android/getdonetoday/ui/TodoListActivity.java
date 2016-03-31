@@ -46,12 +46,7 @@ public class TodoListActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                buildAndShowAddTodoDialog();
-//                addTodo();
-//                mRealmRecyclerView.smoothScrollToPosition(mTodoItems.size() - 1);
-//                Snackbar.make(view, "Added to list", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
+                buildAndShowAddTodoDialog(view);
             }
         });
 
@@ -74,7 +69,7 @@ public class TodoListActivity extends AppCompatActivity {
         mRealm.commitTransaction();
     }
 
-    private void buildAndShowAddTodoDialog() {
+    private void buildAndShowAddTodoDialog(final View view) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         LayoutInflater inflater = getLayoutInflater();
@@ -87,7 +82,11 @@ public class TodoListActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         EditText editText = (EditText) dialogContent.findViewById(R.id.add_todo_dialog_text);
                         String todoText = editText.getText().toString();
-                        addTodo(todoText);
+                        if (!todoText.isEmpty()) {
+                            addTodo(todoText);
+                            Snackbar.make(view, "Added to list", Snackbar.LENGTH_LONG)
+                                    .setAction("Action", null).show();
+                        }
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
