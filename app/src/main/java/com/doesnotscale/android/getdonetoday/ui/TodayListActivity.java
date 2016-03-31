@@ -60,14 +60,14 @@ public class TodayListActivity extends AppCompatActivity {
 
         mTodoItemFactory = new TodoItemFactory(mTodoItems.max("id"));
 
-        for (int i = 0; i < 10; i++) {
-            mRealm.beginTransaction();
-            TodoItem item = mTodoItemFactory.create();
-            item.setText("TodoItem: " + item.getId());
-            item.setToday((item.getId() % 2) == 0);
-            mRealm.copyToRealm(item);
-            mRealm.commitTransaction();
-        }
+//        for (int i = 0; i < 10; i++) {
+//            mRealm.beginTransaction();
+//            TodoItem item = mTodoItemFactory.create();
+//            item.setText("TodoItem: " + item.getId());
+//            item.setToday((item.getId() % 2) == 0);
+//            mRealm.copyToRealm(item);
+//            mRealm.commitTransaction();
+//        }
 
         mRealmRecyclerView  = (RealmRecyclerView) findViewById(R.id.realm_recycler_view);
         mTodoRealmAdapter = new TodoRealmAdapter(this, mTodoItems, true, true);
@@ -127,21 +127,10 @@ public class TodayListActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void addTodo() {
-        mRealm.beginTransaction();
-        TodoItem item = mTodoItemFactory.create();
-        item.setText("TodoItem: " + item.getId());
-        mRealm.copyToRealm(item);
-        mRealm.commitTransaction();
-    }
-
     private class AddTodoFabClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
-            addTodo();
-            mRealmRecyclerView.smoothScrollToPosition(mTodoItems.size() - 1);
-//                Snackbar.make(view, "Added to list", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
+            startActivity(TodoListActivity.newIntent(getApplicationContext()));
         }
     }
 
